@@ -14,7 +14,7 @@
 int main(int argc, char **argv) {
     HANDLE hIcmpFile;
     DWORD dwRetVal = 0;
-    char SendData[32] = "Data Buffer";
+    char SendData[] = "Data Buffer";
     LPVOID ReplyBuffer = NULL;
     DWORD ReplySize = 0;
 
