@@ -11,13 +11,25 @@
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "Ws2_32.lib")
 
+#define IP6_STR_SIZE 46
+
 int main(int argc, char **argv) {
     HANDLE hIcmpFile;
+    struct sockaddr_in6 src_addr, dst_addr;
     DWORD dwRetVal = 0;
     char SendData[] = "Data Buffer";
     LPVOID ReplyBuffer = NULL;
     DWORD ReplySize = 0;
 
+    if (argc != 2) {
+        printf("usage: %s IP address\n", argv[0]);
+        return 1;
+    }
+
+    if (inet_pton(AF_INET6, argv[1], &dst_addr.sin6_addr) == NULL) {
+        printf("usage: %s IP address\n", argv[0]);
+        return 1;
+    }
 
     ReplySize = 8184; // at leastat least  sizeof(ICMP6_ECHO_REPLY) + sizeof(SendData) + 8 + sizeof(IO_STATUS_BLOCK)
     ReplyBuffer = (VOID*) malloc(ReplySize);
@@ -25,7 +37,6 @@ int main(int argc, char **argv) {
         printf("\tUnable to allocate memory\n");
         return 1;
     }
-
 
     hIcmpFile = Icmp6CreateFile();
     if (hIcmpFile == INVALID_HANDLE_VALUE) {
@@ -37,7 +48,6 @@ int main(int argc, char **argv) {
         printf("\tHandle created.\n");
     }
 
-    struct sockaddr_in6 src_addr, dst_addr;
 
     src_addr.sin6_family = AF_UNSPEC;
     src_addr.sin6_port = htons(0);
@@ -49,7 +59,8 @@ int main(int argc, char **argv) {
     dst_addr.sin6_port = htons(0);
     dst_addr.sin6_flowinfo = 0;
     dst_addr.sin6_scope_id = 0;
-    inet_pton(AF_INET6, "fe80::bde0:a6c2:e0c9:7354", &dst_addr.sin6_addr);
+    // sin6_addr already defined
+
 
     dwRetVal = Icmp6SendEcho2(
             hIcmpFile,  // HANDLE                 IcmpHandle,
@@ -81,7 +92,7 @@ int main(int argc, char **argv) {
     }    
 
     PICMPV6_ECHO_REPLY_LH pEchoReply = (PICMPV6_ECHO_REPLY_LH)ReplyBuffer;
-    char ReplyAddrStr[46];
+    char ReplyAddrStr[IP6_STR_SIZE];
 
     inet_ntop(AF_INET6, pEchoReply->Address.sin6_addr, ReplyAddrStr, sizeof(ReplyAddrStr));
     printf("\t  Received from %s\n", ReplyAddrStr);
