@@ -1,7 +1,10 @@
+#define WIN32_LEAN_AND_MEAN
+
 #include <winsock2.h>
 #include <iphlpapi.h>
 #include <icmpapi.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "ws2_32.lib")
