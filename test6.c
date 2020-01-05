@@ -66,9 +66,30 @@ int main(int argc, char **argv) {
             1000   // DWORD                  Timeout
             );
 
+    if (ReplyBuffer != NULL) {
+        printf("reply: %s\n", (char*) ReplyBuffer);
+    }
+
+    
+    unsigned long err = GetLastError();
+
+    LPTSTR s;
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+            FORMAT_MESSAGE_FROM_SYSTEM,
+            NULL,
+            err,
+            0,
+            (LPTSTR)&s,
+            0,
+            NULL);
+
+    printf("%s\n", s);
+
+
+    printf("dwRetVal: %ld\n", dwRetVal);
     if (dwRetVal == 0) {
         printf("\tCall to IcmpSendEcho failed.\n");
-        printf("\tIcmpSendEcho returned error: %ld\n", GetLastError() );
+        printf("\tIcmpSendEcho returned error: %ld\n", err );
         return 1;
     }
 }
