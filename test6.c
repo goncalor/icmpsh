@@ -71,4 +71,20 @@ int main(int argc, char **argv) {
         printf("\tIcmpSendEcho returned error: %ld\n", GetLastError());
         return 1;
     }
+    if (dwRetVal > 1) {
+        printf("\tReceived %ld icmp message responses\n", dwRetVal);
+        printf("\tInformation from the first response:\n"); 
+    }    
+    else {    
+        printf("\tReceived %ld icmp message response\n", dwRetVal);
+        printf("\tInformation from this response:\n"); 
+    }    
+
+    PICMPV6_ECHO_REPLY_LH pEchoReply = (PICMPV6_ECHO_REPLY_LH)ReplyBuffer;
+    char ReplyAddrStr[46];
+
+    inet_ntop(AF_INET6, pEchoReply->Address.sin6_addr, ReplyAddrStr, sizeof(ReplyAddrStr));
+    printf("\t  Received from %s\n", ReplyAddrStr);
+    printf("\t  Status = %ld\n", pEchoReply->Status);
+    printf("\t  Roundtrip time = %ld milliseconds\n", pEchoReply->RoundTripTime);
 }
